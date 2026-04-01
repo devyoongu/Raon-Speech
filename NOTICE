@@ -1,0 +1,39 @@
+RAON
+Copyright 2026 The RAON Authors
+
+This product includes software developed by third parties.
+
+=========================================================================
+HuggingFace Transformers
+=========================================================================
+Copyright 2018- The Hugging Face team. All rights reserved.
+Licensed under the Apache License, Version 2.0
+https://github.com/huggingface/transformers
+
+=========================================================================
+Qwen3 Models (Qwen3, Qwen3OmniMoe)
+=========================================================================
+Copyright 2026 Alibaba Cloud. All rights reserved.
+Licensed under the Apache License, Version 2.0
+https://github.com/QwenLM/Qwen3
+
+=========================================================================
+Mimi Audio Codec
+=========================================================================
+Copyright 2024 Kyutai Labs. All rights reserved.
+Licensed under the Apache License, Version 2.0
+https://huggingface.co/kyutai/mimi
+
+=========================================================================
+SpeechBrain (ECAPA-TDNN Speaker Encoder)
+=========================================================================
+Copyright 2021 SpeechBrain Authors. All rights reserved.
+Licensed under the Apache License, Version 2.0
+https://github.com/speechbrain/speechbrain
+
+=========================================================================
+PyTorch
+=========================================================================
+Copyright (c) 2016- Facebook, Inc. (Adam Paszke)
+Licensed under the BSD 3-Clause License
+https://github.com/pytorch/pytorch

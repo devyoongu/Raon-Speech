@@ -1,0 +1,41 @@
+# Task-specific inference parameters.
+# Each key is a task type detected from the JSONL "channel" field.
+
+# Text output defaults
+default_text: &default_text
+  max_new_tokens: 1024
+  temperature: 0.7
+  force_audio_output: false
+  force_text_output: true
+
+# Audio output defaults
+default_audio: &default_audio
+  max_new_tokens: 512
+  temperature: 1.2
+  force_audio_output: true
+  force_text_output: false
+
+default_text_with_audio_input: &default_text_with_audio_input
+  <<: *default_text
+  max_audio_chunk_length: 192000
+
+tts: &tts
+  <<: *default_audio
+  ras_enabled: true
+  ras_window_size: 50
+  ras_repetition_threshold: 0.5
+
+tts_continuation:
+  <<: *tts
+  continuation_silence_frames: 1
+
+stt:
+  <<: *default_text_with_audio_input
+  max_new_tokens: 512
+  temperature: 0.2
+
+speech-chat:
+  <<: *default_text_with_audio_input
+
+textqa:
+  <<: *default_text_with_audio_input

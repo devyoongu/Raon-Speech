@@ -1,0 +1,18 @@
+# Data Licenses
+
+The example data included in this directory is sourced from publicly available
+datasets released under permissive licenses.
+
+## Audio
+
+| Dataset | License | URL |
+|---------|---------|-----|
+| LibriTTS-R | CC BY 4.0 | https://www.openslr.org/141/ |
+| LibriHeavy | CC BY 4.0 | https://github.com/k2-fsa/libriheavy |
+| SLUE Phase-2 SQA5 | CC BY-SA 4.0 | https://huggingface.co/datasets/asapp/slue-phase-2 |
+| atomic10x | CC BY 4.0 | https://huggingface.co/datasets/allenai/atomic |
+| AI-Hub Korean speech example data | AI-Hub 이용정책 / 데이터 이용정책 | https://www.aihub.or.kr/ |
+
+## Notes
+
+Some full-duplex training examples include in-house synthesized audio generated using Qwen3-TTS.

@@ -1,0 +1,16 @@
+# RAON - Environment Requirements
+# Install with: pip install -r requirements.txt
+
+accelerate>=1.10.1
+einops
+kernels
+numpy
+pydantic>=2.11.10
+requests
+soundfile>=0.13.1
+speechbrain
+tensorboard
+torch
+torchaudio
+tqdm
+transformers>=4.57.1

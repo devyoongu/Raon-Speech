@@ -1,0 +1,2 @@
+{"conversations": [{"from": "human", "value": "<audio>"}, {"from": "gpt", "value": "allotrope"}], "audios": ["data/speechllm/eval/audio/speech-chat.wav"], "channel": "speech-chat"}
+{"conversations": [{"from": "human", "value": "<audio>"}, {"from": "gpt", "value": "이번 계획은 시민의 안전과 불편을 최소화하면서도, 현장 중심의 신속한 대응체제를 구축하기 위한 것으로, 특히 고령자와 어린이, 장애인 등 취약 계층을 위한 맞춤형 서비스 강화와 민원 처리 속도 향상이 핵심 목표다."}], "audios": ["data/speechllm/eval/audio/speech-chat_kor.wav"], "channel": "speech-chat"}

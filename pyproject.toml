@@ -1,0 +1,87 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "raon"
+version = "0.1.0"
+description = "RAON: speechllm fine-tuning and inference for speech generation tasks"
+readme = "README.md"
+requires-python = ">=3.11"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+license = { text = "Apache-2.0" }
+dependencies = [
+    "accelerate>=1.10.1",
+    "einops",
+    "kernels",
+    "numpy",
+    "pydantic>=2.11.10",
+    "requests",
+    "soundfile>=0.13.1",
+    "speechbrain",
+    "tensorboard",
+    "torch",
+    "torchaudio",
+    "transformers>=4.57.1",
+    "tqdm",
+    "ipykernel>=7.0.1",
+]
+
+[project.optional-dependencies]
+demo = [
+    "fastapi>=0.115.0",
+    "gradio>=4.0.0",
+    "sglang==0.5.9",
+    "uvicorn[standard]>=0.30.0",
+]
+dev = [
+    "mypy>=1.11.2",
+    "pytest>=8.0.0",
+    "pytest-forked>=1.6.0",
+    "ruff>=0.7.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/YOUR_ORG/raon"
+Repository = "https://github.com/YOUR_ORG/raon"
+
+[tool.setuptools]
+packages = { find = { where = ["src"], include = ["raon*"] } }
+include-package-data = true
+
+[tool.pytest.ini_options]
+markers = [
+    "slow: marks tests as slow (downloads models, runs inference on CPU)",
+]
+
+[tool.ruff]
+line-length = 125
+target-version = "py311"
+
+[tool.ruff.format]
+indent-style = "space"
+quote-style = "double"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "Q"]
+ignore = ["E203", "E402"]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["E402", "F401", "F403", "F811"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["raon", "demo"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_unused_configs = true
+ignore_missing_imports = true
+disallow_untyped_defs = true
+warn_return_any = true
+warn_unused_ignores = false
+show_error_codes = true

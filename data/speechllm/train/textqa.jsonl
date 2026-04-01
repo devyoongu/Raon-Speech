@@ -1,0 +1,2 @@
+{"conversations": [{"from": "human", "value": "<audio>"}, {"from": "human", "value": "What are some potential issues that can arise with books in a library?"}, {"from": "gpt", "value": "Mildew and unglued pages."}], "audios": ["data/speechllm/train/audio/textqa.wav"], "channel": "textqa"}
+{"conversations": [{"from": "human", "value": "<audio>"}, {"from": "human", "value": "이 대화의 내용을 1-2문장으로 요약하세요."}, {"from": "gpt", "value": "예전에는 언니를 믿었지만 이제는 신뢰를 잃고, 사업에 큰 피해를 주지 않는 한 일단은 그대로 두려는 생각이다."}], "audios": ["data/speechllm/train/audio/textqa_kor.wav"], "channel": "textqa"}

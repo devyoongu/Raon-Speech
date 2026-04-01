@@ -1,0 +1,15 @@
+# Duplex inference parameters.
+# CLI arguments override these values when provided.
+duplex:
+  do_sample: true
+  temperature: 0.9
+  top_p: 0.95
+  top_k: 66
+  eos_penalty: 0.0
+  sil_penalty: 0.0
+  bc_penalty: 0.0
+  speak_first: false
+  system_prompt_style: "base"
+  persona: null
+  context: null
+  system_prompt: "You are engaging in real-time conversation."

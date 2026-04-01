@@ -1,0 +1,2 @@
+{"conversations": [{"from": "human", "value": "<audio>"}, {"from": "human", "value": "What is the gender of the speaker?"}, {"from": "gpt", "value": "The speaker is female."}], "audios": ["data/speechllm/eval/audio/textqa.wav"], "channel": "textqa"}
+{"conversations": [{"from": "human", "value": "<audio>"}, {"from": "human", "value": "화자가 느끼는 자신의 성격 관련 고민은 무엇인가요?"}, {"from": "gpt", "value": "이 화자는 모든 상황에서 사람 감정이 우선이면 자신이 제일 손해 본다고 느끼며, 그것을 바꾸기 어렵다고 말한다.\n\n항상 타인의 감정을 우선시해 자신이 손해 본다는 것"}], "audios": ["data/speechllm/eval/audio/textqa_kor.wav"], "channel": "textqa"}
