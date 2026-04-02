@@ -1,4 +1,4 @@
-# RAON
+# Raon
 
 <div align="center">
   <picture>
@@ -24,14 +24,14 @@
 - GitHub: https://github.com/krafton-ai/Raon-Speech
 - Official Demo: https://raon.krafton.ai
 - Hugging Face Org: https://huggingface.co/KRAFTON
-- SpeechLLM model card: https://huggingface.co/KRAFTON/Raon-Speech-9B
-- Full-Duplex model card: https://huggingface.co/KRAFTON/Raon-SpeechChat-9B
+- Speech model card: https://huggingface.co/KRAFTON/Raon-Speech-9B
+- SpeechChat (Full-Duplex) model card: https://huggingface.co/KRAFTON/Raon-SpeechChat-9B
 
-RAON is a speech model built on HuggingFace Transformers.  
+Raon is a speech model built on HuggingFace Ecosystem.  
 This repo contains two tracks:
 
-- SpeechLLM (offline): `TTS`, `STT`, `SpeechChat`, `TextQA`
-- Full-Duplex (realtime/offline duplex decoding)
+- Raon-Speech (offline): `TTS`, `STT`, `SpeechChat`, `TextQA`
+- Raon-SpeechChat (Full-Duplex) (realtime/offline duplex decoding)
 
 Both tracks share the same core model family and processor stack under `src/raon/`.
 
@@ -89,7 +89,7 @@ After `pip install -e .` (or `uv sync`), all entry points are supported:
 
 Supported:
 
-- SpeechLLM Gradio demo (`demo/gradio_demo.py`) has a fallback that loads Hub remote code when `raon` import fails.
+- Raon-Speech Gradio demo (`demo/gradio_demo.py`) has a fallback that loads Hub remote code when `raon` import fails.
   Run directly from HF repo:
 
 ```bash
@@ -123,7 +123,7 @@ pipe = RaonPipeline(MODEL_ID, device="cuda", dtype="bfloat16")
 Not supported as-is:
 
 - `python -m raon.*` module commands (used by `scripts/*.sh`)
-- Full-duplex realtime demo runtime (`demo/gradio_duplex_demo.py`) because runtime code imports `raon.*` modules.
+- Raon-SpeechChat (Full-duplex) realtime demo runtime (`demo/gradio_duplex_demo.py`) because runtime code imports `raon.*` modules.
 
 If you do not want package installation but run from source checkout, set `PYTHONPATH` to `src`:
 
@@ -198,9 +198,9 @@ Raon-Speech/
 
 ## Model Architecture
 
-- One shared backbone: `RaonModel` (Qwen3 text backbone + audio encoder + Mimi codec path).
+- One shared backbone: `RaonModel` (LM backbone + audio encoder + Mimi codec path).
 - Two model types:
-  `raon` (SpeechLLM) and `raon_duplex` (full-duplex; `RaonDuplexModel` alias with duplex defaults).
+  `raon` (Raon-Speech) and `raon_duplex` (full-duplex; `RaonDuplexModel` alias with duplex defaults).
 - Main trainable blocks include text/audio alignment and audio code prediction
   (`input_adaptor`, `output_adaptor`, `audio_lm_head`, `proj_code`, `code_predictor`).
 
@@ -416,13 +416,13 @@ Current behavior:
 
 ## Gradio Demos
 
-### SpeechLLM demo
+### Raon-Speech demo
 
 ```bash
 bash demo/run_gradio_demo.sh --model /path/to/model --port 7860
 ```
 
-### Full-duplex realtime demo
+### Raon-SpeechChat realtime demo
 
 1. Export HF checkpoint to SGLang bundle:
 
@@ -438,7 +438,7 @@ bash demo/run_gradio_duplex_demo.sh --model-path /path/to/sglang_bundle --port 7
 
 Notes:
 
-- Duplex realtime demo expects bundle layout containing `text_model/` and `raon_runtime/` (or `duplex_model/`)
+- Full-Duplex realtime demo expects bundle layout containing `text_model/` and `raon_runtime/` (or `duplex_model/`)
 - Launcher keeps compile warmup enabled (`FD_ENABLE_COMPILE_AUDIO_MODULES=1`)
 
 ## License
