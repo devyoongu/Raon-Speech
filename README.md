@@ -30,7 +30,7 @@
 Raon is a speech model built on HuggingFace Ecosystem.  
 This repo contains two tracks:
 
-- Raon-Speech (offline): `TTS`, `STT`, `SpeechChat`, `TextQA`
+- Raon-Speech (Offline): `TTS`, `STT`, `SpeechChat`, `TextQA`
 - Raon-SpeechChat (Full-Duplex) (realtime/offline duplex decoding)
 
 Both tracks share the same core model family and processor stack under `src/raon/`.
