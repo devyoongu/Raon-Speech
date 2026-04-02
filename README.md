@@ -22,6 +22,7 @@
 
 **Links**
 - GitHub: https://github.com/krafton-ai/Raon-Speech
+- Official Demo: https://raon.krafton.ai
 - Hugging Face Org: https://huggingface.co/KRAFTON
 - SpeechLLM model card: https://huggingface.co/KRAFTON/Raon-Speech-9B
 - Full-Duplex model card: https://huggingface.co/KRAFTON/Raon-SpeechChat-9B
