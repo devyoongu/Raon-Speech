@@ -27,7 +27,7 @@
 - SpeechLLM model card: https://huggingface.co/KRAFTON/Raon-Speech-9B
 - Full-Duplex model card: https://huggingface.co/KRAFTON/Raon-SpeechChat-9B
 
-RAON is a publishable speech model repository built on HuggingFace Transformers.  
+RAON is a speech model built on HuggingFace Transformers.  
 This repo contains two tracks:
 
 - SpeechLLM (offline): `TTS`, `STT`, `SpeechChat`, `TextQA`
