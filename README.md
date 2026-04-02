@@ -137,7 +137,7 @@ export PYTHONPATH="$(pwd)/src:${PYTHONPATH}"
 
 ```bash
 git clone https://github.com/krafton-ai/Raon-Speech
-cd raon
+cd Raon-Speech
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
@@ -148,7 +148,7 @@ pip install -e .
 
 ```bash
 git clone https://github.com/krafton-ai/Raon-Speech
-cd raon
+cd Raon-Speech
 uv sync
 ```
 
@@ -179,7 +179,7 @@ pip install flash-attn
 ## Project Layout
 
 ```text
-raon/
+Raon-Speech/
 ├── src/raon/                 # package code
 │   ├── models/               # RaonModel / RaonDuplexModel
 │   ├── modules/              # audio encoder, tokenizer, speaker encoder, etc.
