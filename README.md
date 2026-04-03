@@ -154,12 +154,6 @@ Not supported as-is:
 - `python -m raon.*` module commands (used by `scripts/*.sh`)
 - Raon-SpeechChat (Full-duplex) realtime demo runtime (`demo/gradio_duplex_demo.py`) because runtime code imports `raon.*` modules.
 
-If you do not want package installation but run from source checkout, set `PYTHONPATH` to `src`:
-
-```bash
-export PYTHONPATH="$(pwd)/src:${PYTHONPATH}"
-```
-
 ## Environment Setup
 
 ### Option A: `venv` + `pip`
@@ -253,13 +247,6 @@ bash scripts/infer.sh
 - edit the preset variables at the top of `scripts/infer.sh` for quick runs
 - `--attn-implementation` controls attention backend (default `sdpa`; use `fa` for FlashAttention)
 - `data_dir` is scanned for JSONL files, and each line is treated as one sample.
-
-Optional config override:
-
-```bash
-CONFIG="/path/to/config.yaml"  # set in scripts/infer.sh
-bash scripts/infer.sh
-```
 
 Advanced CLI example:
 
@@ -390,13 +377,6 @@ bash scripts/duplex_infer.sh
 - edit the preset variables at the top of `scripts/duplex_infer.sh` for quick runs
 - `--attn-implementation` controls attention backend (default `eager`; use `fa` for FlashAttention)
 - `data-dir` is scanned recursively for `*.jsonl`, and every line is treated as one sample.
-
-Optional config override:
-
-```bash
-CONFIG="/path/to/config.yaml"  # set in scripts/duplex_infer.sh
-bash scripts/duplex_infer.sh
-```
 
 Advanced CLI example:
 
