@@ -410,6 +410,7 @@ def parse_args() -> argparse.Namespace:
         default="KRAFTON/Raon-Speech-9B",
         help="Local model path or HuggingFace model ID (default: KRAFTON/Raon-Speech-9B)",
     )
+    parser.add_argument("--config", default=None, help="Path to infer.yaml-style task defaults")
     parser.add_argument("--device", default="cuda", help="Device (default: cuda)")
     parser.add_argument("--dtype", default="bfloat16", help="Data type (default: bfloat16)")
     parser.add_argument("--hf-token", default=None, help="HuggingFace token for private models")
@@ -444,7 +445,7 @@ def main() -> None:
     _ensure_hub_code(args.model)
 
     print(f"Loading RaonPipeline from: {args.model} ...")
-    pipe = RaonPipeline(args.model, device=args.device, dtype=args.dtype)
+    pipe = RaonPipeline(args.model, device=args.device, dtype=args.dtype, config=args.config)
     print("Pipeline ready.\n")
 
     demo = build_interface(pipe, args.model)

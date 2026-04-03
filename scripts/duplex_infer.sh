@@ -2,7 +2,7 @@
 # Run RAON full-duplex inference on an input audio file.
 #
 # Usage:
-#   bash scripts/duplex_infer.sh [MODEL_PATH] [AUDIO_INPUT] [OUTPUT_DIR]
+#   bash scripts/duplex_infer.sh [MODEL_PATH] [AUDIO_INPUT] [OUTPUT_DIR] [CONFIG_PATH]
 #
 # All arguments are optional and have sensible defaults.
 # Sampling parameters (temperature, top_p, top_k, etc.) are configured
@@ -17,6 +17,7 @@ REPO_DIR="$(dirname "$SCRIPT_DIR")"
 MODEL_PATH="${1:-/path/to/duplex/model}"
 AUDIO_INPUT="${2:-/path/to/input.flac}"
 OUTPUT_DIR="${3:-${REPO_DIR}/output/duplex-inference}"
+CONFIG="${4:-}"
 DEVICE="${DEVICE:-cuda}"
 DTYPE="${DTYPE:-bfloat16}"
 SPEAKER_AUDIO="${SPEAKER_AUDIO:-}"
@@ -29,6 +30,9 @@ echo "Output dir: ${OUTPUT_DIR}"
 echo "Device:     ${DEVICE}"
 echo "Dtype:      ${DTYPE}"
 echo "Attn impl:  ${ATTN_IMPLEMENTATION}"
+if [ -n "${CONFIG}" ]; then
+    echo "Config:     ${CONFIG}"
+fi
 if [ -n "${CUDA_VISIBLE_DEVICES:-}" ]; then
     echo "GPU:        ${CUDA_VISIBLE_DEVICES}"
 fi
@@ -44,4 +48,5 @@ python -m raon.duplex_generate \
     --device "${DEVICE}" \
     --dtype "${DTYPE}" \
     --attn_implementation "${ATTN_IMPLEMENTATION}" \
+    ${CONFIG:+--config "${CONFIG}"} \
     ${SPEAKER_AUDIO:+--speaker_audio "${SPEAKER_AUDIO}"}
