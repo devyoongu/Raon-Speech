@@ -48,7 +48,7 @@ class RaonPipeline:
     """High-level inference API for RAON speech LLM.
 
     Loads the model and processor once, and exposes task-specific methods for
-    STT, TTS, TextQA, SpeechChat, and text generation.
+    STT, TTS, TextQA, and Speech-Chat.
 
     Example::
 
@@ -64,6 +64,8 @@ class RaonPipeline:
         device: str = "cuda",
         dtype: str = "bfloat16",
         attn_implementation: str = "sdpa",
+        config: str | None = None,
+        duplex_config: str | None = None,
     ) -> None:
         """Load model, processor, and default task parameters from infer.yaml.
 
@@ -72,6 +74,8 @@ class RaonPipeline:
             device: Device to run inference on (e.g. ``"cuda"``, ``"cpu"``).
             dtype: Torch dtype string — one of ``"bfloat16"``, ``"float16"``, ``"float32"``.
             attn_implementation: Attention backend string (``"sdpa"``, ``"eager"``, or ``"fa"``).
+            config: Optional path to ``infer.yaml``-style task defaults.
+            duplex_config: Optional path to ``duplex_infer.yaml``-style defaults.
         """
         torch_dtype = DTYPE_MAP[dtype]
         self.device = device
@@ -89,11 +93,13 @@ class RaonPipeline:
         logger.info("Pipeline attention implementation: %s", attn_implementation)
         self.processor: RaonProcessor = RaonProcessor.from_pretrained(model_path)
 
-        with open(_DEFAULT_INFERENCE_CONFIG, encoding="utf-8") as f:
+        inference_config_path = Path(config) if config is not None else _DEFAULT_INFERENCE_CONFIG
+        with open(inference_config_path, encoding="utf-8") as f:
             self.task_params: dict[str, dict] = yaml.safe_load(f)
 
-        if _DEFAULT_DUPLEX_CONFIG.exists():
-            with open(_DEFAULT_DUPLEX_CONFIG, encoding="utf-8") as f:
+        duplex_config_path = Path(duplex_config) if duplex_config is not None else _DEFAULT_DUPLEX_CONFIG
+        if duplex_config_path.exists():
+            with open(duplex_config_path, encoding="utf-8") as f:
                 raw = yaml.safe_load(f)
             self.duplex_params: dict = raw.get("duplex", {}) if raw else {}
         else:
@@ -395,7 +401,7 @@ class RaonPipeline:
         return waveform[:length], self.processor.sampling_rate
 
     def speech_chat(self, audio: str) -> str:
-        """SpeechChat: audio → text.
+        """Speech-Chat: audio → text.
 
         Args:
             audio: Path to the audio file containing the spoken question.

@@ -1,39 +1,35 @@
 #!/bin/bash
 # Run RAON full-duplex fine-tuning with HuggingFace Trainer.
 #
-# Usage:
-#   bash scripts/duplex_train.sh [MODEL_PATH] [DATA_DIR] [OUTPUT_DIR] [EXTRA_ARGS...]
+# Edit the preset variables below, then run:
+#   bash scripts/duplex_train.sh
 #
-# All arguments are optional and have sensible defaults.
-# Extra arguments (position 4+) are forwarded directly to the Python script.
-#
-# Environment variables:
-#   NPROC_PER_NODE  Number of GPUs (default: 1)
-#   MASTER_PORT     torchrun master port (default: 29500)
-#   MAX_STEPS       Training steps (default: 100)
-#   SAVE_STEPS      Checkpoint interval (default: 50)
-#   BATCH_SIZE      Ignored. Duplex training is fixed to batch size 1.
-#   LEARNING_RATE   Learning rate (default: 1e-5)
-#   DTYPE           Model dtype (default: bfloat16)
+# Environment variables kept for low-level runtime control:
 #   NCCL_TIMEOUT    NCCL timeout in seconds (default: 1800)
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
 REPO_DIR="$(dirname "$SCRIPT_DIR")"
 
-# --- Configurable parameters ---
-MODEL_PATH="${1:-/path/to/duplex/model}"
-DATA_DIR="${2:-/path/to/data/dir}"
-OUTPUT_DIR="${3:-${REPO_DIR}/output/duplex-finetune}"
-MAX_STEPS="${MAX_STEPS:-100}"
-SAVE_STEPS="${SAVE_STEPS:-50}"
+MODEL_PATH="/path/to/duplex-model"
+DATA_DIR="/path/to/data-dir"
+OUTPUT_DIR="${REPO_DIR}/output/duplex-finetune"
+MAX_STEPS="100"
+SAVE_STEPS="50"
 BATCH_SIZE="1"
-LEARNING_RATE="${LEARNING_RATE:-1e-5}"
-DTYPE="${DTYPE:-bfloat16}"
-NPROC_PER_NODE="${NPROC_PER_NODE:-1}"
-MASTER_PORT="${MASTER_PORT:-29500}"
+LEARNING_RATE="1e-5"
+DTYPE="bfloat16"
+ATTN_IMPLEMENTATION="sdpa"
+NPROC_PER_NODE="1"
+MASTER_PORT="29500"
+EXTRA_ARGS=()
+
+if [ "${BATCH_SIZE}" != "1" ]; then
+    echo "duplex training is fixed to --batch-size 1" >&2
+    exit 2
+fi
+
 if [ -z "${CUDA_VISIBLE_DEVICES:-}" ]; then
     export CUDA_VISIBLE_DEVICES=$(seq -s, 0 $((NPROC_PER_NODE - 1)))
 fi
@@ -48,6 +44,7 @@ echo "Save steps:     ${SAVE_STEPS}"
 echo "Batch size:     ${BATCH_SIZE} (fixed)"
 echo "Learning rate:  ${LEARNING_RATE}"
 echo "Dtype:          ${DTYPE}"
+echo "Attn impl:      ${ATTN_IMPLEMENTATION}"
 echo "Num GPUs:       ${NPROC_PER_NODE}"
 echo "Master port:    ${MASTER_PORT}"
 echo "NCCL timeout:   ${NCCL_TIMEOUT}"
@@ -66,14 +63,15 @@ COMMON_ARGS=(
     --batch_size "1"
     --learning_rate "${LEARNING_RATE}"
     --dtype "${DTYPE}"
+    --attn_implementation "${ATTN_IMPLEMENTATION}"
 )
 
 if [ "${NPROC_PER_NODE}" -gt 1 ]; then
-    torchrun \
+    exec torchrun \
         --nproc_per_node="${NPROC_PER_NODE}" \
         --master_port="${MASTER_PORT}" \
         "${COMMON_ARGS[@]}" \
-        "${@:4}"
+        "${EXTRA_ARGS[@]}"
 else
-    python "${COMMON_ARGS[@]}" "${@:4}"
+    exec python "${COMMON_ARGS[@]}" "${EXTRA_ARGS[@]}"
 fi

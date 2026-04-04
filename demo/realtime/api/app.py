@@ -109,6 +109,8 @@ class RealtimeRuntimeManager:
                 chunked_prefill_size=runtime_payload.get("chunked_prefill_size"),
                 max_allocated_req_pool_indices=int(runtime_payload.get("max_allocated_req_pool_indices", 32)),
                 gpu_id=int(runtime_payload.get("gpu_id", 0)),
+                compile_audio_modules=str(runtime_payload.get("compile_audio_modules", True)).lower() not in ("false", "0", "no"),
+                compile_max_sequence_length=int(runtime_payload.get("compile_max_sequence_length", 8192)),
             )
             logger.info("runtime preload complete model_path=%s", self.model_path)
         except Exception:

@@ -420,6 +420,19 @@ def parse_args() -> argparse.Namespace:
         default=DEFAULT_SPEAKER_AUDIO,
         help="Default speaker reference audio path for realtime speaker conditioning.",
     )
+    parser.add_argument(
+        "--compile-audio-modules",
+        type=str,
+        default="true",
+        choices=["true", "false"],
+        help="Whether to run compile_audio_modules during runtime startup.",
+    )
+    parser.add_argument(
+        "--compile-max-sequence-length",
+        type=int,
+        default=8192,
+        help="Maximum sequence length used when compiling realtime audio modules.",
+    )
     return parser.parse_args()
 
 
@@ -435,7 +448,13 @@ def main() -> None:
     )
     fastapi_app = create_fastapi_app(
         model_path=args.model_path,
-        session_kwargs={"result_root": args.result_root},
+        session_kwargs={
+            "result_root": args.result_root,
+            "runtime": {
+                "compile_audio_modules": args.compile_audio_modules == "true",
+                "compile_max_sequence_length": args.compile_max_sequence_length,
+            },
+        },
         ws_path=args.ws_path,
     )
     app = mount_gradio_app(fastapi_app, demo, path="/")

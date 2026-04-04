@@ -21,6 +21,13 @@ Usage:
         --output_dir /path/to/output \
         --device cuda \
         --dtype bfloat16
+
+    python -m raon.duplex_generate \
+        --model_path /path/to/model \
+        --data_dir /path/to/data-dir \
+        --output_dir /path/to/output \
+        --device cuda \
+        --dtype bfloat16
 """
 
 from __future__ import annotations
@@ -28,6 +35,9 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import shlex
+import subprocess
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -97,7 +107,18 @@ def _extract_speaker_audio_from_metadata(metadata: dict) -> str | None:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run RAON full-duplex inference on an input audio file.")
     parser.add_argument("--model_path", type=str, required=True, help="Path to the pretrained model directory.")
-    parser.add_argument("--audio_input", type=str, required=True, help="Path to the input audio file (.wav).")
+    parser.add_argument(
+        "--audio_input",
+        type=str,
+        default=None,
+        help="Path to the input audio file (.wav). Use this for single-sample inference.",
+    )
+    parser.add_argument(
+        "--data_dir",
+        type=str,
+        default=None,
+        help="Directory scanned recursively for *.jsonl. Each non-empty line is treated as one sample.",
+    )
     parser.add_argument("--output_dir", type=str, required=True, help="Directory to save the output audio.")
     parser.add_argument("--device", type=str, default="cuda", help="Device (default: cuda).")
     parser.add_argument(
@@ -176,6 +197,8 @@ def parse_args() -> argparse.Namespace:
         help="Attention implementation (default: eager). Use `fa` for FlashAttention.",
     )
     args = parser.parse_args()
+    if bool(args.audio_input) == bool(args.data_dir):
+        parser.error("Provide exactly one of --audio_input or --data_dir.")
     if args.attn_implementation == "fa":
         args.attn_implementation = "flash_attention_2"
 
@@ -304,6 +327,19 @@ def load_audio(path: str, target_sr: int, device: str, dtype: torch.dtype, chann
 
 
 from raon.utils.audio_io import save_audio
+
+
+def _resolve_dataset_path(path_value: str | None, jsonl_path: Path) -> str | None:
+    if not path_value:
+        return None
+    raw = Path(path_value).expanduser()
+    if raw.is_absolute():
+        return str(raw)
+    candidates = [raw, jsonl_path.parent / raw, jsonl_path.parent.parent / raw]
+    for candidate in candidates:
+        if candidate.exists():
+            return str(candidate.resolve())
+    return None
 
 
 def save_stereo_audio(
@@ -505,6 +541,85 @@ def run_duplex_inference(
 def main() -> None:
     logging.basicConfig(level=logging.INFO)
     args = parse_args()
+
+    if args.data_dir:
+        data_dir = Path(args.data_dir)
+        output_root = Path(args.output_dir)
+        jsonl_files = sorted(data_dir.rglob("*.jsonl"))
+        if not jsonl_files:
+            raise SystemExit(f"No JSONL files found under: {data_dir}")
+
+        processed = 0
+        for jsonl_path in jsonl_files:
+            with open(jsonl_path, encoding="utf-8") as f:
+                for idx, line in enumerate(f):
+                    line = line.strip()
+                    if not line:
+                        continue
+                    record = json.loads(line)
+                    audio_path = _resolve_dataset_path(record.get("audio_path"), jsonl_path)
+                    if not audio_path:
+                        raise SystemExit(f"Missing audio_path in {jsonl_path}:{idx + 1}")
+
+                    sample_out = output_root / f"{jsonl_path.stem}_{idx:05d}"
+                    cmd = [
+                        sys.executable,
+                        "-m",
+                        "raon.duplex_generate",
+                        "--model_path",
+                        args.model_path,
+                        "--audio_input",
+                        audio_path,
+                        "--output_dir",
+                        str(sample_out),
+                        "--device",
+                        args.device,
+                        "--dtype",
+                        args.dtype,
+                    ]
+                    if args.config:
+                        cmd += ["--config", args.config]
+
+                    attn_arg = "fa" if args.attn_implementation == "flash_attention_2" else args.attn_implementation
+                    cmd += ["--attn_implementation", attn_arg]
+
+                    if args.temperature is not None:
+                        cmd += ["--temperature", str(args.temperature)]
+                    if args.top_k is not None:
+                        cmd += ["--top_k", str(args.top_k)]
+                    if args.top_p is not None:
+                        cmd += ["--top_p", str(args.top_p)]
+                    if args.sil_penalty is not None:
+                        cmd += ["--sil_penalty", str(args.sil_penalty)]
+                    if args.bc_penalty is not None:
+                        cmd += ["--bc_penalty", str(args.bc_penalty)]
+                    if args.eos_penalty is not None:
+                        cmd += ["--eos_penalty", str(args.eos_penalty)]
+
+                    speaker_audio = args.speaker_audio or _resolve_dataset_path(
+                        record.get("speaker_audio") or ((record.get("speaker_ref_audios") or [None])[0]),
+                        jsonl_path,
+                    )
+                    if speaker_audio:
+                        cmd += ["--speaker_audio", speaker_audio]
+
+                    if isinstance(record.get("speak_first"), bool) and record["speak_first"]:
+                        cmd.append("--speak_first")
+                    if isinstance(record.get("persona"), str) and record["persona"].strip():
+                        cmd += ["--persona", record["persona"].strip()]
+                    if isinstance(record.get("context"), str) and record["context"].strip():
+                        cmd += ["--context", record["context"].strip()]
+                    if isinstance(record.get("system_prompt"), str) and record["system_prompt"].strip():
+                        cmd += ["--system_prompt", record["system_prompt"].strip()]
+                    if args.seed is not None:
+                        cmd += ["--seed", str(args.seed)]
+
+                    logger.info("[%s:%05d] %s", jsonl_path.name, idx, " ".join(shlex.quote(part) for part in cmd))
+                    subprocess.run(cmd, check=True)
+                    processed += 1
+
+        logger.info("Processed %d duplex sample(s).", processed)
+        return
 
     torch_dtype = resolve_dtype(args.dtype)
     output_dir = Path(args.output_dir)

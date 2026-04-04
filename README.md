@@ -26,14 +26,43 @@
 - Hugging Face Org: https://huggingface.co/KRAFTON
 - Speech model card: https://huggingface.co/KRAFTON/Raon-Speech-9B
 - SpeechChat (Full-Duplex) model card: https://huggingface.co/KRAFTON/Raon-SpeechChat-9B
+- Technical Report: https://huggingface.co/KRAFTON/Raon-Speech-9B/resolve/main/Technical_Report_Raon_Speech.pdf
 
 Raon is a speech model built on HuggingFace Ecosystem.  
 This repo contains two tracks:
 
-- Raon-Speech (Offline): `TTS`, `STT`, `SpeechChat`, `TextQA`
-- Raon-SpeechChat (Full-Duplex) (realtime/offline duplex decoding)
+- Raon-Speech (Offline SpeechLM): `TTS`, `STT`, `SpeechChat`, `TextQA`
+- Raon-SpeechChat (Offline/Realtime Full-Duplex)
 
 Both tracks share the same core model family and processor stack under `src/raon/`.
+
+## Key Features
+
+- **SpeechLLM Model:** Raon-Speech is a 9B bilingual (English/Korean) SpeechLM for speech understanding, answering, and generation.
+- **Full-Duplex Model:** Raon-SpeechChat extends Raon-Speech to natural real-time full-duplex conversation and shows strong interaction quality, especially on turn-taking, backchanneling, and interruption handling.
+- **Training Scale:** Raon-Speech is trained on 1M+ hours of curated English-Korean speech-text data and achieves state-of-the-art average performance across 42 speech and text benchmarks against similarly sized baselines. Raon-SpeechChat is continually trained on 116K hours of time-aligned dialogue data.
+- **System Design:** The system is built with a staged LLM-to-SpeechLM training recipe and a full-duplex design based on causal streaming, interleaved speech-text modeling, explicit interaction-state modeling, and text lookahead.
+- **Task Coverage:** Unified multi-task support for `STT`, `TTS`, `TextQA`, and `SpeechChat`, with optional speaker-conditioned TTS and TTS continuation from reference audio.
+- **Transformers Integration:** Hugging Face Transformers integration via `AutoModel.from_pretrained(..., trust_remote_code=True)`.
+- **Open Release:** We open-source model checkpoints, the training and inference pipeline, an interactive demo, and three Korean speech benchmarks: KVoiceBench, KOpenAudioBench, and KMMAU.
+
+## Benchmark Results
+
+Measured with LibriSpeech `test-clean` samples on single-GPU setups via streaming TTS. All values are averaged.
+
+<div align="center">
+  <img src="https://huggingface.co/KRAFTON/Raon-Speech-9B/resolve/main/assets/raon-speech-speechchat.png" alt="Raon-Speech Benchmark Results" width="800">
+</div>
+
+| Metric | RTX 6000 Ada | L40S |
+|---|---:|---:|
+| `RTF` | `0.27` (`3.7x` real-time) | `0.45` (`2.2x` real-time) |
+| `TTFT` | `617 ms` | `887 ms` |
+| `TBT` | `135 ms` | `233 ms` |
+
+- `RTF`: Real-Time Factor. Lower is faster; values below `1.0` indicate faster-than-real-time synthesis.
+- `TTFT`: Time to First Token.
+- `TBT`: Time Between Tokens.
 
 ## Requirements
 
@@ -51,11 +80,10 @@ All model entry points accept either:
 Examples:
 
 ```bash
-# SpeechLLM
-bash scripts/infer.sh KRAFTON/Raon-Speech-9B /path/to/data_dir /path/to/output_dir
-
-# Full-Duplex
-bash scripts/duplex_infer.sh KRAFTON/Raon-SpeechChat-9B /path/to/input.wav /path/to/output_dir
+# Edit preset variables in the script first, then run:
+bash scripts/infer.sh
+# or
+bash scripts/duplex_infer.sh
 ```
 
 ```python
@@ -69,9 +97,9 @@ pipe = RaonPipeline("KRAFTON/Raon-SpeechChat-9B", device="cuda", dtype="bfloat16
 If you want to pre-download first:
 
 ```bash
-huggingface-cli download KRAFTON/Raon-Speech-9B --local-dir /path/to/model_dir
+hf download KRAFTON/Raon-Speech-9B --local-dir /path/to/model_dir
 # or
-huggingface-cli download KRAFTON/Raon-SpeechChat-9B --local-dir /path/to/model_dir
+hf download KRAFTON/Raon-SpeechChat-9B --local-dir /path/to/model_dir
 ```
 
 ## Execution Modes
@@ -94,11 +122,12 @@ Supported:
 
 ```bash
 # from repo root
-bash demo/run_gradio_demo.sh --model KRAFTON/Raon-Speech-9B --port 7860
+bash demo/run_gradio_demo.sh
 ```
 
 - Pure Transformers flow using Hub remote code (advanced):
   `AutoModel.from_pretrained(..., trust_remote_code=True)`.
+
   See examples: `examples/message_example.ipynb` and `examples/duplex_example.ipynb`.
   Minimal pipeline load without `raon` install:
 
@@ -125,12 +154,6 @@ Not supported as-is:
 - `python -m raon.*` module commands (used by `scripts/*.sh`)
 - Raon-SpeechChat (Full-duplex) realtime demo runtime (`demo/gradio_duplex_demo.py`) because runtime code imports `raon.*` modules.
 
-If you do not want package installation but run from source checkout, set `PYTHONPATH` to `src`:
-
-```bash
-export PYTHONPATH="$(pwd)/src:${PYTHONPATH}"
-```
-
 ## Environment Setup
 
 ### Option A: `venv` + `pip`
@@ -152,15 +175,9 @@ cd Raon-Speech
 uv sync
 ```
 
-If you want to pin the virtualenv directory name:
-
-```bash
-UV_PROJECT_ENVIRONMENT=venv_uv uv sync
-```
-
 ### Demo dependencies (optional)
 
-The realtime duplex demo needs extra packages (`sglang`, `gradio`, `fastapi`, `uvicorn`):
+The realtime full-duplex demo needs extra packages (`sglang`, `gradio`, `fastapi`, `uvicorn`):
 
 ```bash
 pip install -e ".[demo]"
@@ -190,7 +207,7 @@ Raon-Speech/
 │   ├── duplex_generate.py    # Full-duplex inference entry
 │   └── pipeline.py           # high-level API (RaonPipeline)
 ├── scripts/                  # shell wrappers
-├── demo/                     # Gradio demos + realtime app
+├── demo/                     # Gradio demos
 ├── config/                   # inference configs
 ├── data/                     # sample datasets
 └── examples/                 # notebooks and scripts
@@ -200,7 +217,7 @@ Raon-Speech/
 
 - One shared backbone: `RaonModel` (LM backbone + audio encoder + Mimi codec path).
 - Two model types:
-  `raon` (Raon-Speech) and `raon_duplex` (full-duplex; `RaonDuplexModel` alias with duplex defaults).
+  `raon` (Raon-Speech) and `raon_duplex` (Raon-SpeechChat).
 - Main trainable blocks include text/audio alignment and audio code prediction
   (`input_adaptor`, `output_adaptor`, `audio_lm_head`, `proj_code`, `code_predictor`).
 
@@ -220,33 +237,42 @@ Each line is one sample.
 
 Sample eval data is under `data/speechllm/eval`.
 
-### Inference (JSONL batch)
+### Inference
 
 ```bash
-bash scripts/infer.sh /path/to/model /path/to/data_dir /path/to/output_dir
+bash scripts/infer.sh
 ```
 
-Key points:
-
-- `scripts/infer.sh` wraps `python -m raon.generate`
 - task defaults come from `config/infer.yaml`
-- `BATCH_SIZE` env controls batch size (default `1` in script)
-- `ATTN_IMPLEMENTATION` env controls attention backend (default `sdpa`; use `fa` for FlashAttention)
-- `max_audio_chunk_length` defaults to `192000` for audio-input text tasks
+- edit the preset variables at the top of `scripts/infer.sh` for quick runs
+- `--attn_implementation` controls attention backend (default `sdpa`; use `fa` for FlashAttention)
+- `--data_dir` is scanned for JSONL files, and each line is treated as one sample.
+
+Advanced CLI example:
+
+```bash
+python -m raon.generate \
+  --model_path /path/to/model \
+  --data_dir /path/to/data_dir \
+  --output_dir /path/to/output_dir \
+  --config /path/to/config.yaml \
+  --batch_size 4 \
+  --attn_implementation sdpa
+```
 
 ### Pipeline API
 
 ```python
 from raon import RaonPipeline
 
-pipe = RaonPipeline("/path/to/model", device="cuda", dtype="bfloat16")
+pipe = RaonPipeline("/path/to/model", device="cuda", dtype="bfloat16", config="/path/to/config.yaml")
 
-text = pipe.stt("audio.wav")
-audio, sr = pipe.tts("Hello!", speaker_audio="spk_ref.wav")
-ans1 = pipe.speech_chat("question.wav")
-ans2 = pipe.textqa("What did the speaker say?", audio="audio.wav")
+text = pipe.stt("/path/to/stt.wav")
+audio, sr = pipe.tts("Hello!", speaker_audio="/path/to/speaker_ref.wav")
+ans1 = pipe.speech_chat("/path/to/speech-chat.wav")
+ans2 = pipe.textqa("What did the speaker say?", audio="/path/to/textqa.wav")
 
-pipe.save_audio((audio, sr), "tts.wav")
+pipe.save_audio((audio, sr), "/path/to/tts.wav")
 ```
 
 Continuation TTS is also supported:
@@ -254,7 +280,7 @@ Continuation TTS is also supported:
 ```python
 audio, sr = pipe.tts_continuation(
     target_text="Continue this sentence.",
-    ref_audio="ref.wav",
+    ref_audio="/path/to/speaker_ref.wav",
     ref_text="Optional transcription of ref audio.",
 )
 ```
@@ -267,24 +293,20 @@ See:
 ### Training
 
 ```bash
-bash scripts/train.sh /path/to/model /path/to/data_dir /path/to/output_dir
+bash scripts/train.sh
 ```
 
-Common env knobs:
+Common options:
 
-- `NPROC_PER_NODE` (multi-GPU torchrun)
-- `MAX_STEPS` (default `1000`)
-- `SAVE_STEPS` (default `500`)
-- `BATCH_SIZE` (default `1`)
-- `USE_SPEAKER_EMBEDDING` (default `true` in `scripts/train.sh`)
+- edit the preset variables at the top of `scripts/train.sh`
+- `NPROC_PER_NODE` controls multi-GPU torchrun
+- `MASTER_PORT` sets the torchrun rendezvous port
+- `USE_SPEAKER_EMBEDDING` toggles speaker-conditioning inputs
 
 Notes:
 
-- In `raon.train`, packing is enabled by default (`--use_packing`)
-- Script default enables speaker-conditioning inputs; underlying CLI supports `--no-use_speaker_embedding`
 - Current training code freezes these modules: `audio_encoder`, `input_adaptor`, `output_adaptor`, `audio_lm_head`, `proj_code`, `code_predictor`, `speaker_encoder`
-- Default training attention implementation is `sdpa`
-- To use FlashAttention for training, pass `--attn_implementation fa`
+- Default training attention implementation is `sdpa`; to use FlashAttention, pass `--attn_implementation fa`
 
 ## Full-Duplex
 
@@ -299,26 +321,33 @@ Required top-level fields:
 | `audio_path` | `str` | Path to stereo wav (`2` channels). |
 | `language` | `str` | Language code (for prompt selection), e.g. `eng`, `kor`. |
 | `channel` | `str` | Duplex channel type, e.g. `full_duplex` or `duplex_instruct`. |
-| `speak_first` | `list[int|bool]` | Per-channel flag (length 2). |
-| `include_in_training` | `list[int|bool]` | Per-channel train inclusion flag (length 2). |
+| `speak_first` | `list[int or bool]` | Per-channel initial speaking mode for the two channels. `1`/`true` means that channel is treated as speaking first; `0`/`false` means listen-first. |
+| `include_in_training` | `list[int or bool]` | Per-channel training mask for the two channels. `1`/`true` includes that channel's targets in loss computation; `0`/`false` excludes them. |
 | `turns` or `scripts` | `list` | Conversation timing/transcript annotations (one of the two formats below). |
 
 Supported annotation format A (`turns`):
 
+- Use this format when each utterance is already represented as a turn.
 - Each turn contains `channel`, `start_sample`, `end_sample`, and `ipus`.
-- Each IPU contains `words`, where each word has `word`, `start_sample`, `end_sample`.
+- Each IPU contains `words`, and each word has `word`, `start_sample`, `end_sample`.
 
 Supported annotation format B (`scripts`):
 
-- `scripts` is `[ch0_words, ch1_words]`, and each word item has `word`, `start`, `end` (seconds).
-- Optional `timeline` or `rough_timeline` can be provided for utterance bounds.
+- Use this format when you have per-channel word timestamps instead of explicit turns.
+- `scripts` is `[ch0_words, ch1_words]`, and each word item has `word`, `start`, `end` in seconds.
+- You can optionally provide `timeline` or `rough_timeline` for utterance boundaries.
+- If those boundaries include `channel`, they are used directly.
+- Otherwise, the loader derives per-channel utterance boundaries from the word timestamps in `scripts`.
 
 Optional fields:
 
 - `sample_rate` (used for `turns` timestamps; defaults to `24000` if omitted)
 - `system_prompt` (if omitted, prompt is built from persona/context/name metadata when available)
 
-Inference metadata sidecar (`duplex_generate.py`, same stem `.jsonl` near input wav) uses a lightweight format:
+Optional inference metadata sidecar:
+
+- You can place a same-stem `.jsonl` file next to the input wav for prompt and speaker metadata.
+- This is an input metadata format, not a separate CLI argument schema.
 
 | Field | Type | Description |
 |---|---|---|
@@ -338,44 +367,31 @@ Sample data:
 - persona catalog: `data/duplex/personas.json`
 
 Training data uses timeline JSONL + stereo audio assets.  
-Eval examples are provided as mono user-input wavs (`data/duplex/eval/audio/duplex_00.wav`, etc.).
 
-### Inference (simple wrapper)
-
-```bash
-bash scripts/duplex_infer.sh /path/to/model /path/to/input.wav /path/to/output_dir
-```
-
-`scripts/duplex_infer.sh` forwards fixed core args and optional `SPEAKER_AUDIO` env:
+### Inference
 
 ```bash
-SPEAKER_AUDIO=data/duplex/eval/audio/spk_ref.wav \
-bash scripts/duplex_infer.sh /path/to/model /path/to/input.wav /path/to/output_dir
+bash scripts/duplex_infer.sh
 ```
 
-Attention backend can be set with env var (default `eager`; use `fa` for FlashAttention):
+- edit the preset variables at the top of `scripts/duplex_infer.sh` for quick runs
+- `--attn_implementation` controls attention backend (default `sdpa`; use `fa` for FlashAttention)
+- `--data_dir` is scanned recursively for `*.jsonl`, and every line is treated as one sample.
 
-```bash
-ATTN_IMPLEMENTATION=fa \
-bash scripts/duplex_infer.sh /path/to/model /path/to/input.wav /path/to/output_dir
-```
-
-### Inference (advanced CLI options)
-
-For persona/context/sampling options, run the python module directly:
+Advanced CLI example:
 
 ```bash
 python -m raon.duplex_generate \
   --model_path /path/to/model \
-  --audio_input data/duplex/eval/audio/duplex_00.wav \
+  --data_dir /path/to/data_dir \
   --output_dir /path/to/output_dir \
-  --speaker_audio data/duplex/eval/audio/spk_ref.wav \
-  --persona scenario_restaurant \
-  --context "Discuss restaurant menu choices with a customer." \
-  --temperature 0.9 --top_k 66 --top_p 0.95
+  --config /path/to/config.yaml \
+  --speaker_audio /path/to/speaker_ref.wav \
+  --persona /path/or/persona_key \
+  --context "Optional extra context"
 ```
 
-Metadata auto-load is supported: if `duplex_00.jsonl` exists next to `duplex_00.wav` (or one level up), prompt/speaker settings are read from metadata unless overridden by CLI.
+- `data_dir` is scanned recursively for `*.jsonl`, and CLI arguments override per-record metadata when both are provided.
 
 ### Pipeline API
 
@@ -383,14 +399,14 @@ Metadata auto-load is supported: if `duplex_00.jsonl` exists next to `duplex_00.
 from raon import RaonPipeline
 
 pipe = RaonPipeline("/path/to/duplex-model", device="cuda", dtype="bfloat16")
-audio = pipe.load_audio("data/duplex/eval/audio/duplex_00.wav")
+audio = pipe.load_audio("/path/to/input.wav")
 
 summary = pipe.duplex(
     audio_input=audio,
     output_dir="/path/to/output_dir",
     speak_first=False,
     system_prompt="You are engaging in real-time conversation.",
-    speaker_audio="data/duplex/eval/audio/spk_ref.wav",
+    speaker_audio="/path/to/speaker_ref.wav",
 )
 print(summary)
 ```
@@ -402,44 +418,48 @@ See:
 ### Training
 
 ```bash
-bash scripts/duplex_train.sh /path/to/model /path/to/data_dir /path/to/output_dir
+bash scripts/duplex_train.sh
 ```
 
-Current behavior:
+Common options:
 
-- `batch_size` is enforced to `1` in code
-- packing is enabled by default (`--use_packing`, disable with `--no-use_packing`)
-- defaults: `MAX_STEPS=100`, `SAVE_STEPS=50`
-- frozen modules include `speaker_encoder` (same freeze list pattern as SpeechLLM training)
-- Default training attention implementation is `sdpa`
-- To use FlashAttention for training, pass `--attn_implementation fa`
+- edit the preset variables at the top of `scripts/duplex_train.sh`
+- `NPROC_PER_NODE` controls multi-GPU torchrun
+- `MASTER_PORT` sets the torchrun rendezvous port
+- `BATCH_SIZE` is fixed to `1`
+
+Notes:
+
+- same freeze list pattern as SpeechLLM training
+- Default training attention implementation is `sdpa`; to use FlashAttention, pass `--attn_implementation fa`
 
 ## Gradio Demos
 
 ### Raon-Speech demo
 
 ```bash
-bash demo/run_gradio_demo.sh --model /path/to/model --port 7860
+bash demo/run_gradio_demo.sh
 ```
+
+- edit the preset variables at the top of `demo/run_gradio_demo.sh`
 
 ### Raon-SpeechChat realtime demo
 
 1. Export HF checkpoint to SGLang bundle:
 
 ```bash
-bash scripts/export.sh /path/to/hf_duplex_checkpoint /path/to/sglang_bundle
+bash scripts/export.sh
 ```
+
+- edit the preset variables at the top of `scripts/export.sh`
 
 2. Run demo:
 
 ```bash
-bash demo/run_gradio_duplex_demo.sh --model-path /path/to/sglang_bundle --port 7861
+bash demo/run_gradio_duplex_demo.sh
 ```
 
-Notes:
-
-- Full-Duplex realtime demo expects bundle layout containing `text_model/` and `raon_runtime/` (or `duplex_model/`)
-- Launcher keeps compile warmup enabled (`FD_ENABLE_COMPILE_AUDIO_MODULES=1`)
+- edit the preset variables at the top of `demo/run_gradio_duplex_demo.sh`
 
 ## License
 

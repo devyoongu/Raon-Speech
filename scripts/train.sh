@@ -1,21 +1,10 @@
 #!/bin/bash
 # Run RAON fine-tuning with HuggingFace Trainer.
 #
-# Usage:
-#   bash scripts/train.sh [MODEL_PATH] [DATA_DIR] [OUTPUT_DIR] [EXTRA_ARGS...]
+# Edit the preset variables below, then run:
+#   bash scripts/train.sh
 #
-# All arguments are optional and have sensible defaults.
-# Extra arguments (position 4+) are forwarded directly to the Python script.
-#
-# Environment variables:
-#   NPROC_PER_NODE  Number of GPUs (default: 1)
-#   MASTER_PORT     torchrun master port (default: 29500)
-#   MAX_STEPS       Training steps (default: 1000)
-#   SAVE_STEPS      Checkpoint interval (default: 500)
-#   BATCH_SIZE      Per-device batch size (default: 1)
-#   LEARNING_RATE   Learning rate (default: 1e-5)
-#   DTYPE           Model dtype (default: bfloat16)
-#   USE_SPEAKER_EMBEDDING  Enable speaker embedding (default: true)
+# Environment variables kept for low-level runtime control:
 #   NCCL_TIMEOUT    NCCL timeout in seconds (default: 1800)
 #   CUDA_VISIBLE_DEVICES  GPUs to use (default: 0..NPROC_PER_NODE-1)
 
@@ -24,22 +13,20 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_DIR="$(dirname "$SCRIPT_DIR")"
 
-is_true() {
-    [[ "${1:-}" =~ ^([Tt][Rr][Uu][Ee]|1|yes|on)$ ]]
-}
+MODEL_PATH="/path/to/pretrained-model"
+DATA_DIR="/path/to/data-dir"
+OUTPUT_DIR="${REPO_DIR}/output/speechllm-finetune"
+MAX_STEPS="1000"
+SAVE_STEPS="500"
+BATCH_SIZE="1"
+LEARNING_RATE="1e-5"
+DTYPE="bfloat16"
+USE_SPEAKER_EMBEDDING="true"
+ATTN_IMPLEMENTATION="sdpa"
+NPROC_PER_NODE="1"
+MASTER_PORT="29500"
+EXTRA_ARGS=()
 
-# --- Configurable parameters ---
-MODEL_PATH="${1:-/path/to/pretrained/model}"
-DATA_DIR="${2:-/path/to/data/dir}"
-OUTPUT_DIR="${3:-${REPO_DIR}/output/finetune}"
-MAX_STEPS="${MAX_STEPS:-1000}"
-SAVE_STEPS="${SAVE_STEPS:-500}"
-BATCH_SIZE="${BATCH_SIZE:-1}"
-LEARNING_RATE="${LEARNING_RATE:-1e-5}"
-DTYPE="${DTYPE:-bfloat16}"
-USE_SPEAKER_EMBEDDING="${USE_SPEAKER_EMBEDDING:-true}"
-NPROC_PER_NODE="${NPROC_PER_NODE:-1}"
-MASTER_PORT="${MASTER_PORT:-29500}"
 if [ -z "${CUDA_VISIBLE_DEVICES:-}" ]; then
     export CUDA_VISIBLE_DEVICES=$(seq -s, 0 $((NPROC_PER_NODE - 1)))
 fi
@@ -55,6 +42,7 @@ echo "Batch size:     ${BATCH_SIZE}"
 echo "Learning rate:  ${LEARNING_RATE}"
 echo "Dtype:          ${DTYPE}"
 echo "Speaker embed:  ${USE_SPEAKER_EMBEDDING}"
+echo "Attn impl:      ${ATTN_IMPLEMENTATION}"
 echo "Num GPUs:       ${NPROC_PER_NODE}"
 echo "Master port:    ${MASTER_PORT}"
 echo "NCCL timeout:   ${NCCL_TIMEOUT}"
@@ -73,9 +61,10 @@ COMMON_ARGS=(
     --batch_size "${BATCH_SIZE}"
     --learning_rate "${LEARNING_RATE}"
     --dtype "${DTYPE}"
+    --attn_implementation "${ATTN_IMPLEMENTATION}"
 )
 
-if is_true "${USE_SPEAKER_EMBEDDING}"; then
+if [[ "${USE_SPEAKER_EMBEDDING}" == "true" ]]; then
     COMMON_ARGS+=(--use_speaker_embedding)
 else
     COMMON_ARGS+=(--no-use_speaker_embedding)
@@ -83,12 +72,12 @@ fi
 
 if [ "${NPROC_PER_NODE}" -gt 1 ]; then
     # Multi-GPU: use torchrun with NCCL
-    torchrun \
+    exec torchrun \
         --nproc_per_node="${NPROC_PER_NODE}" \
         --master_port="${MASTER_PORT}" \
         "${COMMON_ARGS[@]}" \
-        "${@:4}"
+        "${EXTRA_ARGS[@]}"
 else
     # Single-GPU: run directly without distributed overhead
-    python "${COMMON_ARGS[@]}" "${@:4}"
+    exec python "${COMMON_ARGS[@]}" "${EXTRA_ARGS[@]}"
 fi

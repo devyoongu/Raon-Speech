@@ -83,7 +83,7 @@ def parse_args() -> argparse.Namespace:
         help="Number of samples to process in parallel per batch (default: 4).",
     )
     parser.add_argument(
-        "--inference_config",
+        "--config",
         type=str,
         default=str(_DEFAULT_INFERENCE_CONFIG),
         help="Path to YAML file with task-specific inference parameters.",
@@ -362,8 +362,8 @@ def main() -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
 
     data_dir = Path(args.data_dir)
-    task_params = load_task_params(Path(args.inference_config))
-    logger.info("Loaded inference config from %s (%d task types)", args.inference_config, len(task_params))
+    task_params = load_task_params(Path(args.config))
+    logger.info("Loaded inference config from %s (%d task types)", args.config, len(task_params))
 
     logger.info("Loading model from %s ...", args.model_path)
     model: RaonModel = RaonModel.from_pretrained(args.model_path, torch_dtype=dtype).to(args.device).eval()

@@ -20,7 +20,6 @@ from __future__ import annotations
 import contextlib
 import inspect
 import logging
-import os
 import threading
 import time
 from dataclasses import dataclass, field
@@ -81,23 +80,6 @@ def _safe_int_attr(obj: object, name: str, default: int | None = None) -> int | 
         return default
 
 
-def _env_flag(name: str, default: bool = False) -> bool:
-    value = os.environ.get(name)
-    if value is None:
-        return default
-    return value.strip().lower() in {"1", "true", "yes", "on"}
-
-
-def _env_int(name: str, default: int) -> int:
-    value = os.environ.get(name)
-    if value is None:
-        return default
-    try:
-        return int(value)
-    except ValueError:
-        return default
-
-
 def _resolve_runtime_speaker_audio_path(path_value: str) -> Path:
     """Resolve speaker reference audio path for realtime runtime."""
     raw = Path(path_value).expanduser()
@@ -141,7 +123,12 @@ def _compute_runtime_speaker_embeds(model: Any, speaker_audio_path: str) -> tupl
     return speaker_embeds, cache_key
 
 
-def _prepare_runtime_model(model: Any) -> None:
+def _prepare_runtime_model(
+    model: Any,
+    *,
+    compile_audio_modules: bool = True,
+    compile_max_sequence_length: int = 8192,
+) -> None:
     """Apply fd-demo runtime optimizations once per model instance."""
     with contextlib.suppress(Exception):
         import torch
@@ -182,9 +169,8 @@ def _prepare_runtime_model(model: Any) -> None:
     if hasattr(model, "start_concurrent_audio_decoder"):
         model.start_concurrent_audio_decoder()
 
-    compile_enabled = _env_flag("FD_ENABLE_COMPILE_AUDIO_MODULES", default=True)
-    if not compile_enabled:
-        logger.info("realtime runtime: skipping compile_audio_modules; FD_ENABLE_COMPILE_AUDIO_MODULES is disabled")
+    if not compile_audio_modules:
+        logger.info("realtime runtime: skipping compile_audio_modules; compile_audio_modules is disabled")
         return
 
     if not hasattr(model, "compile_audio_modules"):
@@ -194,12 +180,11 @@ def _prepare_runtime_model(model: Any) -> None:
         return
 
     try:
-        max_sequence_length = _env_int("FD_COMPILE_MAX_SEQUENCE_LENGTH", default=8192)
         logger.info(
             "realtime runtime: compiling audio modules (torch.compile), max_sequence_length=%d",
-            max_sequence_length,
+            compile_max_sequence_length,
         )
-        model.compile_audio_modules(duplex=True, max_sequence_length=max_sequence_length)
+        model.compile_audio_modules(duplex=True, max_sequence_length=compile_max_sequence_length)
         setattr(model, "_realtime_audio_modules_compiled", True)
         logger.info("realtime runtime: compile_audio_modules completed")
     except Exception as exc:
@@ -693,6 +678,8 @@ def get_runtime(
     chunked_prefill_size: int | None = None,
     max_allocated_req_pool_indices: int = 32,
     gpu_id: int = 0,
+    compile_audio_modules: bool = True,
+    compile_max_sequence_length: int = 8192,
 ) -> tuple[SGLangRaonModel, Qwen2TokenizerFast]:
     from transformers import Qwen2TokenizerFast
 
@@ -709,11 +696,17 @@ def get_runtime(
         chunked_prefill_size,
         max_allocated_req_pool_indices,
         gpu_id,
+        compile_audio_modules,
+        compile_max_sequence_length,
     )
     with _RUNTIME_LOCK:
         cached = _RUNTIME_CACHE.get(key)
         if cached is not None:
-            _prepare_runtime_model(cached[0])
+            _prepare_runtime_model(
+                cached[0],
+                compile_audio_modules=compile_audio_modules,
+                compile_max_sequence_length=compile_max_sequence_length,
+            )
             return cached
 
         model = SGLangRaonModel(
@@ -733,7 +726,11 @@ def get_runtime(
             tokenizer = _load_tokenizer_from_bundle(model_path)
             model.tokenizer = tokenizer
 
-        _prepare_runtime_model(model)
+        _prepare_runtime_model(
+            model,
+            compile_audio_modules=compile_audio_modules,
+            compile_max_sequence_length=compile_max_sequence_length,
+        )
 
         runtime = (model, tokenizer)
         _RUNTIME_CACHE[key] = runtime
@@ -799,6 +796,8 @@ class LocalRealtimeSession:
             chunked_prefill_size=runtime_payload.get("chunked_prefill_size"),
             max_allocated_req_pool_indices=int(runtime_payload.get("max_allocated_req_pool_indices", 32)),
             gpu_id=int(runtime_payload.get("gpu_id", 0)),
+            compile_audio_modules=str(runtime_payload.get("compile_audio_modules", True)).lower() not in ("false", "0", "no"),
+            compile_max_sequence_length=int(runtime_payload.get("compile_max_sequence_length", 8192)),
         )
 
         speaker_audio_value = str(session_payload.get("speaker_audio", "") or "").strip()

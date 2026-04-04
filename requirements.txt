@@ -13,4 +13,5 @@ tensorboard
 torch
 torchaudio
 tqdm
-transformers>=4.57.1
+transformers>=4.57.1,<5.0
+datasets>=3.0.0

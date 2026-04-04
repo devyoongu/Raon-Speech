@@ -1,20 +1,18 @@
 #!/bin/bash
 # Export a RAON HuggingFace checkpoint to SGLang bundle format.
 #
-# Usage:
-#   bash scripts/export_hf_to_sglang.sh [INPUT_PATH] [OUTPUT_PATH]
-#
-# All arguments are optional and have sensible defaults.
+# Edit the preset variables below, then run:
+#   bash scripts/export.sh
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_DIR="$(dirname "$SCRIPT_DIR")"
 
-# --- Configurable parameters ---
-INPUT_PATH="${1:-/path/to/hf/checkpoint}"
-OUTPUT_PATH="${2:-${REPO_DIR}/output/sglang-bundle}"
-DTYPE="${DTYPE:-bfloat16}"
+INPUT_PATH="/path/to/hf-duplex-checkpoint"
+OUTPUT_PATH="${REPO_DIR}/output/sglang-bundle"
+DTYPE="bfloat16"
+EXTRA_ARGS=()
 
 echo "=== RAON HF to SGLang Export ==="
 echo "Input:      ${INPUT_PATH}"
@@ -22,8 +20,8 @@ echo "Output:     ${OUTPUT_PATH}"
 echo "Dtype:      ${DTYPE}"
 echo "================================"
 
-python -m raon.export \
+exec python -m raon.export \
     --input_path "${INPUT_PATH}" \
     --output_path "${OUTPUT_PATH}" \
     --dtype "${DTYPE}" \
-    "${@:3}"
+    "${EXTRA_ARGS[@]}"
