@@ -54,7 +54,7 @@ Measured with LibriSpeech `test-clean` samples on single-GPU setups via streamin
   <img src="https://huggingface.co/KRAFTON/Raon-Speech-9B/resolve/main/assets/raon-speech-speechchat.png" alt="Raon-Speech Benchmark Results" width="800">
 </div>
 
-| Metric | RTX 6000 Ada | L40S |
+| Metric | RTX 6000 Blackwell Pro | L40S |
 |---|---:|---:|
 | `RTF` | `0.27` (`3.7x` real-time) | `0.45` (`2.2x` real-time) |
 | `TTFT` | `617 ms` | `887 ms` |
