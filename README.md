@@ -245,8 +245,8 @@ bash scripts/infer.sh
 
 - task defaults come from `config/infer.yaml`
 - edit the preset variables at the top of `scripts/infer.sh` for quick runs
-- `--attn-implementation` controls attention backend (default `sdpa`; use `fa` for FlashAttention)
-- `data_dir` is scanned for JSONL files, and each line is treated as one sample.
+- `--attn_implementation` controls attention backend (default `sdpa`; use `fa` for FlashAttention)
+- `--data_dir` is scanned for JSONL files, and each line is treated as one sample.
 
 Advanced CLI example:
 
@@ -375,8 +375,8 @@ bash scripts/duplex_infer.sh
 ```
 
 - edit the preset variables at the top of `scripts/duplex_infer.sh` for quick runs
-- `--attn-implementation` controls attention backend (default `eager`; use `fa` for FlashAttention)
-- `data-dir` is scanned recursively for `*.jsonl`, and every line is treated as one sample.
+- `--attn_implementation` controls attention backend (default `sdpa`; use `fa` for FlashAttention)
+- `--data_dir` is scanned recursively for `*.jsonl`, and every line is treated as one sample.
 
 Advanced CLI example:
 

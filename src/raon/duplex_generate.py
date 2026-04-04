@@ -37,6 +37,7 @@ import json
 import logging
 import shlex
 import subprocess
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -338,7 +339,7 @@ def _resolve_dataset_path(path_value: str | None, jsonl_path: Path) -> str | Non
     for candidate in candidates:
         if candidate.exists():
             return str(candidate.resolve())
-    return str(candidates[0].resolve())
+    return None
 
 
 def save_stereo_audio(
@@ -562,7 +563,7 @@ def main() -> None:
 
                     sample_out = output_root / f"{jsonl_path.stem}_{idx:05d}"
                     cmd = [
-                        "python",
+                        sys.executable,
                         "-m",
                         "raon.duplex_generate",
                         "--model_path",
@@ -581,6 +582,19 @@ def main() -> None:
 
                     attn_arg = "fa" if args.attn_implementation == "flash_attention_2" else args.attn_implementation
                     cmd += ["--attn_implementation", attn_arg]
+
+                    if args.temperature is not None:
+                        cmd += ["--temperature", str(args.temperature)]
+                    if args.top_k is not None:
+                        cmd += ["--top_k", str(args.top_k)]
+                    if args.top_p is not None:
+                        cmd += ["--top_p", str(args.top_p)]
+                    if args.sil_penalty is not None:
+                        cmd += ["--sil_penalty", str(args.sil_penalty)]
+                    if args.bc_penalty is not None:
+                        cmd += ["--bc_penalty", str(args.bc_penalty)]
+                    if args.eos_penalty is not None:
+                        cmd += ["--eos_penalty", str(args.eos_penalty)]
 
                     speaker_audio = args.speaker_audio or _resolve_dataset_path(
                         record.get("speaker_audio") or ((record.get("speaker_ref_audios") or [None])[0]),
