@@ -48,11 +48,13 @@ Both tracks share the same core model family and processor stack under `src/raon
 
 ## Benchmark Results
 
-Measured with LibriSpeech `test-clean` samples on single-GPU setups via streaming TTS. All values are averaged.
-
 <div align="center">
   <img src="https://huggingface.co/KRAFTON/Raon-Speech-9B/resolve/main/assets/raon-speech-speechchat.png" alt="Raon-Speech Benchmark Results" width="800">
 </div>
+
+Raon-Speech is optimized for low-latency, real-time speech generation while maintaining strong performance across ASR, speech generation, spoken QA, audio understanding, and text QA tasks. In the benchmarks above, Raon-Speech shows consistently high cross-domain scores, while Raon-SpeechChat performs strongly on conversational speech capabilities such as pause handling, backchanneling, smooth turn-taking, interruption handling, overlap robustness, and multi-turn dialogue. On single-GPU streaming TTS setups, the model runs faster than real time on both RTX 6000 Pro and L40S, with sub-second time-to-first-token latency.
+
+Measured with LibriSpeech `test-clean` samples on single-GPU setups via streaming TTS. All values are averaged.
 
 | Metric | RTX 6000 Pro Blackwell | L40S |
 |---|---:|---:|
