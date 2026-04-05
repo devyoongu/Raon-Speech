@@ -48,6 +48,8 @@ Both tracks share the same core model family and processor stack under `src/raon
 
 ## Benchmark Results
 
+Overall performance comparison of Raon-Speech and Raon-SpeechChat against baseline models across diverse benchmarks.
+
 <div align="center">
   <img src="https://huggingface.co/KRAFTON/Raon-Speech-9B/resolve/main/assets/raon-speech-speechchat.png" alt="Raon-Speech Benchmark Results" width="800">
 </div>
