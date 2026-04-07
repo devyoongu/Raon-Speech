@@ -151,6 +151,12 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Penalty subtracted from BC token logit (default: from config or 0.0).",
     )
+    parser.add_argument(
+        "--eos_penalty",
+        type=float,
+        default=None,
+        help="Penalty subtracted from EOS/pad token logit to encourage longer output (default: from config or 0.0).",
+    )
     parser.add_argument("--seed", type=int, default=None, help="Optional RNG seed for reproducible duplex decoding.")
     parser.add_argument(
         "--speak_first",
@@ -258,7 +264,8 @@ def parse_args() -> argparse.Namespace:
     if args.top_k is None:
         args.top_k = int(cfg.get("top_k", 66))
     args.do_sample = bool(cfg.get("do_sample", True))
-    args.eos_penalty = float(cfg.get("eos_penalty", 0.0))
+    if args.eos_penalty is None:
+        args.eos_penalty = float(cfg.get("eos_penalty", 0.0))
     if args.sil_penalty is None:
         args.sil_penalty = float(cfg.get("sil_penalty", 0.0))
     if args.bc_penalty is None:
