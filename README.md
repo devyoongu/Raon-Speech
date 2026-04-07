@@ -467,3 +467,15 @@ bash demo/run_gradio_duplex_demo.sh
 ## License
 
 Apache License 2.0. See `LICENSE`.
+
+## Citation
+
+```bash
+@misc{raonspeech,
+    title  = {Raon-Speech Technical Report},
+    author = {{KRAFTON}},
+    month  = {April},
+    year   = {2026}
+}
+```
+
