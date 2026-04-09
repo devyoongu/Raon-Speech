@@ -47,7 +47,7 @@ def main() -> None:
         import torch
 
         gpu_name = torch.cuda.get_device_name(0)
-        gpu_mem = torch.cuda.get_device_properties(0).total_mem / 1024**3
+        gpu_mem = torch.cuda.get_device_properties(0).total_memory / 1024**3
         print(f"GPU: {gpu_name} ({gpu_mem:.1f} GB)")
         if gpu_mem < 25:
             print("WARNING: 9B model needs ~18GB+ VRAM. OOM may occur during inference.")
