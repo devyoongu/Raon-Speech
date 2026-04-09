@@ -74,7 +74,7 @@ def main() -> None:
 
     # --- 2. TTS ---
     def test_tts():  # type: ignore[no-untyped-def]
-        text = "Hello, this is a test of the Raon Speech synthesis system."
+        text = "안녕하세요, 라온 스피치 음성 합성 테스트입니다. 오늘 날씨가 정말 좋네요."
         print(f"  Input text: {text!r}")
         audio, sr = pipe.tts(text, speaker_audio=audio_path)
         out = output_dir / "tts_output.wav"
