@@ -433,6 +433,18 @@ def parse_args() -> argparse.Namespace:
         default=8192,
         help="Maximum sequence length used when compiling realtime audio modules.",
     )
+    parser.add_argument(
+        "--disable-cuda-graph",
+        action="store_true",
+        default=False,
+        help="Disable CUDA graph capture (reduces GPU memory usage).",
+    )
+    parser.add_argument(
+        "--mem-fraction-static",
+        type=float,
+        default=0.88,
+        help="Fraction of GPU memory to reserve for static allocation.",
+    )
     return parser.parse_args()
 
 
@@ -453,6 +465,8 @@ def main() -> None:
             "runtime": {
                 "compile_audio_modules": args.compile_audio_modules == "true",
                 "compile_max_sequence_length": args.compile_max_sequence_length,
+                "disable_cuda_graph": args.disable_cuda_graph,
+                "mem_fraction_static": args.mem_fraction_static,
             },
         },
         ws_path=args.ws_path,
