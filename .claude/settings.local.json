@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc -l /Users/yglee/python/Raon-Speech/src/raon/utils/*.py)",
+      "Bash(chmod:*)"
+    ]
+  }
+}

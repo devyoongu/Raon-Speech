@@ -1,0 +1,12 @@
+{
+  "femail_achernar": {
+    "ref_audio": "/home/posicube/tts/faster-qwen3-tts/wav/femail_achernar.wav",
+    "ref_text": "안녕하세요 메타엠 시연용 콜봇입니다 무엇을 도와드릴까요",
+    "language": "Korean"
+  },
+  "mail_achird": {
+    "ref_audio": "/home/posicube/tts/faster-qwen3-tts/wav/mail_achird.wav",
+    "ref_text": "안녕하세요 메타엠 시연용 콜봇입니다 무엇을 도와드릴까요",
+    "language": "Korean"
+  }
+}
