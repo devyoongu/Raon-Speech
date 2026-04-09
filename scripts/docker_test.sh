@@ -5,16 +5,6 @@ HF_CACHE="/home/posicube/.cache/huggingface"
 IMAGE_NAME="raon-speech-test"
 
 # -----------------------------------------------------------
-# Step 1: Download Raon-Speech-9B model (if not already cached)
-# -----------------------------------------------------------
-echo "=== Step 1: Downloading KRAFTON/Raon-Speech-9B ==="
-docker run --rm \
-    -v "${HF_CACHE}:/root/.cache/huggingface" \
-    -e HF_HOME=/root/.cache/huggingface \
-    python:3.11-slim \
-    bash -c "pip install -q huggingface_hub && python -c \"from huggingface_hub import snapshot_download; snapshot_download('KRAFTON/Raon-Speech-9B')\""
-
-# -----------------------------------------------------------
 # Step 2: Build Docker image
 # -----------------------------------------------------------
 echo ""
