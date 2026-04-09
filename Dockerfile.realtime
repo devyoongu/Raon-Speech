@@ -1,0 +1,30 @@
+FROM python:3.11-slim
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV HF_HOME=/root/.cache/huggingface
+
+# Install system dependencies
+RUN apt-get update && \
+    apt-get install -y \
+        libsndfile1 \
+        ffmpeg \
+        git \
+        build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Install PyTorch with CUDA 12.8 (compatible with driver 575 / CUDA 12.9)
+RUN pip install --no-cache-dir \
+    torch torchaudio --index-url https://download.pytorch.org/whl/cu128
+
+# Install core + demo dependencies
+COPY requirements.txt pyproject.toml ./
+COPY src/ src/
+RUN pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir -e ".[demo]"
+
+# Copy full project
+COPY . .
+
+EXPOSE 7861

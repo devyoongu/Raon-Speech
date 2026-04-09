@@ -85,7 +85,7 @@ def main() -> None:
 
     run_test("TTS", test_tts)
 
-    # --- 3. SpeechChat ---
+    # --- 3. SpeechChat (text response) ---
     def test_speech_chat():  # type: ignore[no-untyped-def]
         answer = pipe.speech_chat(audio_path)
         print(f"  Answer: {answer}")
@@ -94,7 +94,30 @@ def main() -> None:
         print(f"  Saved to {out}")
         return answer
 
-    run_test("SpeechChat", test_speech_chat)
+    run_test("SpeechChat (text)", test_speech_chat)
+
+    # --- 4. Audio-to-Audio: audio input → audio output ---
+    def test_audio_to_audio():  # type: ignore[no-untyped-def]
+        messages = [
+            {
+                "role": "user",
+                "content": [{"type": "audio", "audio": audio_path}],
+            }
+        ]
+        result = pipe.chat(
+            messages,
+            force_audio_output=True,
+            force_text_output=False,
+            speaker_audio=audio_path,
+        )
+        audio, sr = result
+        out = output_dir / "audio_to_audio_output.wav"
+        pipe.save_audio((audio, sr), str(out))
+        print(f"  Generated audio: {audio.shape[0] / sr:.2f}s @ {sr}Hz")
+        print(f"  Saved to {out}")
+        return audio, sr
+
+    run_test("Audio-to-Audio", test_audio_to_audio)
 
     # --- Summary ---
     print(f"\n{'='*60}")
