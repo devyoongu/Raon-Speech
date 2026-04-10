@@ -25,8 +25,9 @@ COPY src/ src/
 RUN pip install --no-cache-dir -r requirements.txt && \
     pip install --no-cache-dir -e ".[demo]"
 
-# Install flash-attn (pre-built wheel, no CUDA toolkit needed)
-RUN pip install --no-cache-dir flash-attn --no-build-isolation
+# Install flash-attn pre-built wheel (torch 2.9, CUDA 12.8, Python 3.11)
+RUN pip install --no-cache-dir flash-attn==2.7.4.post1 --find-links https://github.com/Dao-AILab/flash-attention/releases/expanded_assets/v2.7.4.post1 || \
+    echo "flash-attn pre-built wheel unavailable, skipping"
 
 # Copy full project
 COPY . .
