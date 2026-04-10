@@ -25,6 +25,9 @@ COPY src/ src/
 RUN pip install --no-cache-dir -r requirements.txt && \
     pip install --no-cache-dir -e ".[demo]"
 
+# Install flash-attn (pre-built wheel, no CUDA toolkit needed)
+RUN pip install --no-cache-dir flash-attn --no-build-isolation
+
 # Copy full project
 COPY . .
 
