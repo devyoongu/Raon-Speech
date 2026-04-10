@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM pytorch/pytorch:2.6.0-cuda12.6-cudnn9-devel
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV HF_HOME=/root/.cache/huggingface
@@ -9,25 +9,23 @@ RUN apt-get update && \
         libsndfile1 \
         ffmpeg \
         git \
-        build-essential \
         ninja-build \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Install PyTorch with CUDA 12.8 (compatible with driver 575 / CUDA 12.9)
+# Upgrade PyTorch to cu128 for driver 575 compatibility
 RUN pip install --no-cache-dir \
     torch torchaudio --index-url https://download.pytorch.org/whl/cu128
+
+# Install flash-attn (nvcc available in devel image)
+RUN pip install --no-cache-dir flash-attn
 
 # Install core + demo dependencies
 COPY requirements.txt pyproject.toml ./
 COPY src/ src/
 RUN pip install --no-cache-dir -r requirements.txt && \
     pip install --no-cache-dir -e ".[demo]"
-
-# Install flash-attn pre-built wheel (torch 2.9, CUDA 12.8, Python 3.11)
-RUN pip install --no-cache-dir flash-attn==2.7.4.post1 --find-links https://github.com/Dao-AILab/flash-attention/releases/expanded_assets/v2.7.4.post1 || \
-    echo "flash-attn pre-built wheel unavailable, skipping"
 
 # Copy full project
 COPY . .
