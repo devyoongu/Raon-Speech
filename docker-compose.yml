@@ -1,0 +1,35 @@
+services:
+  raon-realtime:
+    build: .
+    container_name: raon-realtime
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=0
+      - CUDA_VISIBLE_DEVICES=0
+    volumes:
+      # HuggingFace cache (모델 체크포인트)
+      - /home/yh.ahn/.cache/huggingface:/root/.cache/huggingface
+      # Export 결과 및 데모 출력 저장
+      - ./output:/app/output
+    ports:
+      - "7861:7861"
+    # Step 1) export: docker compose run raon-realtime --export-only
+    # Step 2) serve:  docker compose up raon-realtime
+    command:
+      - "--host"
+      - "0.0.0.0"
+      - "--port"
+      - "7861"
+      - "--model-path"
+      - "/app/output/sglang-bundle"
+      - "--result-root"
+      - "/app/output/fd-gradio-demo"
+      - "--compile-audio-modules"
+      - "true"
+      - "--compile-max-sequence-length"
+      - "8192"
+    shm_size: "16g"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
