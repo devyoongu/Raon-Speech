@@ -21,17 +21,15 @@ RUN curl -sS https://bootstrap.pypa.io/get-pip.py | python3.11
 
 WORKDIR /app
 
-# Install dependencies first (cache layer)
-COPY pyproject.toml ./
-RUN pip install --no-cache-dir -e ".[demo]" 2>/dev/null || \
-    pip install --no-cache-dir setuptools wheel && \
-    pip install --no-cache-dir -e ".[demo]"
+# Copy files required for editable install (src/ must exist for setuptools)
+COPY pyproject.toml README.md ./
+COPY src/ ./src/
 
-# Copy project source
-COPY . .
-
-# Re-install in editable mode with full source
+# Install dependencies (cache layer — rebuild only when pyproject.toml changes)
 RUN pip install --no-cache-dir -e ".[demo]"
+
+# Copy remaining project files
+COPY . .
 
 EXPOSE 7861
 
